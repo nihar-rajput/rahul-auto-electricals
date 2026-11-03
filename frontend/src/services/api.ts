@@ -15,7 +15,16 @@ import {
   DashboardStats,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const getApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return '/api/v1';
+  }
+  const trimmed = envUrl.trim().replace(/\/+$/, '');
+  return trimmed.endsWith('/api/v1') ? trimmed : `${trimmed}/api/v1`;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -315,5 +324,9 @@ export const fetchAdminSettings = async (): Promise<WebsiteSettings> => {
 export const updateAdminSettings = async (settingsData: Partial<WebsiteSettings>): Promise<WebsiteSettings> => {
   const { data } = await apiClient.put<WebsiteSettings>('/admin/settings', settingsData);
   return data;
+};
+
+export const getExportProductsCsvUrl = () => {
+  return `${API_BASE_URL}/admin/products/export/csv`;
 };
 

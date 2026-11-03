@@ -27,6 +27,7 @@ import {
   fetchCategories,
   uploadProductImage,
   importProductsCsv,
+  getExportProductsCsvUrl,
   fetchVehicleManufacturers,
   fetchVehicleModels,
   apiClient,
@@ -222,9 +223,7 @@ export const AdminProductsPage: React.FC = () => {
   };
 
   const handleExportCsv = () => {
-    const token = localStorage.getItem('token');
-    const url = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/admin/products/export/csv`;
-    // Trigger download
+    const url = getExportProductsCsvUrl();
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', 'products_inventory.csv');

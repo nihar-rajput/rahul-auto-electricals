@@ -58,13 +58,13 @@ export const AdminProductsPage: React.FC = () => {
     part_number: '',
     battery_type: 'Car',
     description: '',
-    price: 0,
-    quantity: 0,
+    price: '' as any,
+    quantity: '' as any,
     voltage: '12V',
     ah_capacity: '',
     warranty_duration: '',
     guarantee_details: '',
-    low_stock_threshold: 5,
+    low_stock_threshold: '' as any,
     stock_visibility_mode: 'SIMPLE_STATUS',
     is_published: true,
     images: [],
@@ -152,13 +152,13 @@ export const AdminProductsPage: React.FC = () => {
       part_number: '',
       battery_type: 'Car',
       description: '',
-      price: 0,
-      quantity: 0,
+      price: '' as any,
+      quantity: '' as any,
       voltage: '12V',
       ah_capacity: '',
       warranty_duration: '48 Months (24 Free + 24 Pro-rata)',
       guarantee_details: '24 Months Replacement',
-      low_stock_threshold: 5,
+      low_stock_threshold: '' as any,
       stock_visibility_mode: 'SIMPLE_STATUS',
       is_published: true,
       images: [],
@@ -294,7 +294,16 @@ export const AdminProductsPage: React.FC = () => {
       alert('Please fill out all required fields');
       return;
     }
-    saveMutation.mutate(formData);
+    const payload = {
+      ...formData,
+      price: !formData.price || String(formData.price).trim() === '' ? 0 : Number(formData.price),
+      quantity: !formData.quantity || String(formData.quantity).trim() === '' ? 0 : Number(formData.quantity),
+      low_stock_threshold:
+        !formData.low_stock_threshold || String(formData.low_stock_threshold).trim() === ''
+          ? 5
+          : Number(formData.low_stock_threshold),
+    };
+    saveMutation.mutate(payload);
   };
 
   return (
@@ -680,8 +689,14 @@ export const AdminProductsPage: React.FC = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                    value={formData.price ?? ''}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? ('' as any) : e.target.value })}
+                    onFocus={(e) => {
+                      if (e.target.value === '0' || e.target.value === '0.00') {
+                        e.target.select();
+                      }
+                    }}
                     required
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-semibold"
                   />
@@ -692,8 +707,14 @@ export const AdminProductsPage: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value, 10) || 0 })}
+                    placeholder="0"
+                    value={formData.quantity ?? ''}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value === '' ? ('' as any) : e.target.value })}
+                    onFocus={(e) => {
+                      if (e.target.value === '0') {
+                        e.target.select();
+                      }
+                    }}
                     required
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
                   />
@@ -704,8 +725,14 @@ export const AdminProductsPage: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    value={formData.low_stock_threshold}
-                    onChange={(e) => setFormData({ ...formData, low_stock_threshold: parseInt(e.target.value, 10) || 5 })}
+                    placeholder="5"
+                    value={formData.low_stock_threshold ?? ''}
+                    onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value === '' ? ('' as any) : e.target.value })}
+                    onFocus={(e) => {
+                      if (e.target.value === '0' || e.target.value === '5') {
+                        e.target.select();
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>

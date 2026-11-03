@@ -56,7 +56,11 @@ export const AdminSettingsPage: React.FC = () => {
   }, [settings]);
 
   const updateMutation = useMutation({
-    mutationFn: () => updateAdminSettings(formData),
+    mutationFn: () =>
+      updateAdminSettings({
+        ...formData,
+        default_low_stock_threshold: Number(formData.default_low_stock_threshold) || 5,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings-full'] });
       queryClient.invalidateQueries({ queryKey: ['public-settings'] });
@@ -228,13 +232,15 @@ export const AdminSettingsPage: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.default_low_stock_threshold || 5}
+                  placeholder="5"
+                  value={formData.default_low_stock_threshold ?? ''}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      default_low_stock_threshold: parseInt(e.target.value, 10) || 5,
+                      default_low_stock_threshold: e.target.value === '' ? ('' as any) : parseInt(e.target.value, 10),
                     })
                   }
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-semibold"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">

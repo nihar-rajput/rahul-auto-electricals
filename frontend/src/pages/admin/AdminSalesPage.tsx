@@ -41,8 +41,8 @@ export const AdminSalesPage: React.FC = () => {
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
-  const [saleQuantity, setSaleQuantity] = useState(1);
-  const [unitPrice, setUnitPrice] = useState<number>(0);
+  const [saleQuantity, setSaleQuantity] = useState<number | string>(1);
+  const [unitPrice, setUnitPrice] = useState<number | string>(0);
 
   // Sale items list for the new sale
   const [saleItems, setSaleItems] = useState<
@@ -152,8 +152,11 @@ export const AdminSalesPage: React.FC = () => {
     const prod = productsData?.items.find((p) => p.id === selectedProductId);
     if (!prod) return;
 
-    if (saleQuantity > prod.quantity) {
-      alert(`Cannot add ${saleQuantity} units. Only ${prod.quantity} available in stock!`);
+    const qty = Number(saleQuantity) || 1;
+    const price = Number(unitPrice) || 0;
+
+    if (qty > prod.quantity) {
+      alert(`Cannot add ${qty} units. Only ${prod.quantity} available in stock!`);
       return;
     }
 
@@ -162,8 +165,8 @@ export const AdminSalesPage: React.FC = () => {
       {
         product_id: prod.id,
         product_name: `${prod.name} (${prod.model})`,
-        quantity: saleQuantity,
-        unit_price: unitPrice,
+        quantity: qty,
+        unit_price: price,
         max_stock: prod.quantity,
       },
     ]);
@@ -450,8 +453,10 @@ export const AdminSalesPage: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    value={saleQuantity}
-                    onChange={(e) => setSaleQuantity(parseInt(e.target.value, 10) || 1)}
+                    placeholder="1"
+                    value={saleQuantity ?? ''}
+                    onChange={(e) => setSaleQuantity(e.target.value === '' ? '' : e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg outline-none"
                   />
                 </div>
@@ -461,8 +466,10 @@ export const AdminSalesPage: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    value={unitPrice}
-                    onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    value={unitPrice ?? ''}
+                    onChange={(e) => setUnitPrice(e.target.value === '' ? '' : e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg outline-none font-semibold"
                   />
                 </div>

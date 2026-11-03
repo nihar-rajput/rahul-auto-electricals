@@ -35,7 +35,7 @@ export const AdminInventoryPage: React.FC = () => {
 
   // Form
   const [movementType, setMovementType] = useState<'RESTOCK' | 'MANUAL_REMOVAL' | 'CORRECTION'>('RESTOCK');
-  const [quantityChange, setQuantityChange] = useState<number>(1);
+  const [quantityChange, setQuantityChange] = useState<number | string>(1);
   const [reason, setReason] = useState<string>('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -66,7 +66,7 @@ export const AdminInventoryPage: React.FC = () => {
       adjustStock({
         product_id: targetProduct!.id,
         movement_type: movementType,
-        quantity_change: quantityChange,
+        quantity_change: Number(quantityChange) || 0,
         reason: reason.trim(),
       }),
     onSuccess: (res) => {
@@ -458,8 +458,12 @@ export const AdminInventoryPage: React.FC = () => {
                 <input
                   type="number"
                   min="0"
-                  value={quantityChange}
-                  onChange={(e) => setQuantityChange(parseInt(e.target.value, 10) || 0)}
+                  placeholder="0"
+                  value={quantityChange ?? ''}
+                  onChange={(e) => setQuantityChange(e.target.value === '' ? '' : e.target.value)}
+                  onFocus={(e) => {
+                    e.target.select();
+                  }}
                   required
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-semibold font-mono"
                 />

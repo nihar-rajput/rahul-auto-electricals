@@ -68,6 +68,7 @@ export const AdminProductsPage: React.FC = () => {
   });
 
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
   const [csvUploadLoading, setCsvUploadLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -202,6 +203,18 @@ export const AdminProductsPage: React.FC = () => {
     } finally {
       setImageUploadLoading(false);
     }
+  };
+
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      images: [
+        ...(prev.images || []),
+        { id: '', image_url: imageUrlInput.trim(), is_primary: (prev.images?.length || 0) === 0, display_order: prev.images?.length || 0 },
+      ],
+    }));
+    setImageUrlInput('');
   };
 
   // CSV Import handler
@@ -688,15 +701,38 @@ export const AdminProductsPage: React.FC = () => {
               {/* Image Upload Box */}
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Product Images</label>
-                <div className="flex items-center gap-3">
-                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition font-medium">
-                    <ImageIcon className="w-4 h-4" />
-                    <span>{imageUploadLoading ? 'Uploading...' : 'Upload Image'}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition font-medium text-xs">
+                    <ImageIcon className="w-4 h-4 text-amber-600" />
+                    <span>{imageUploadLoading ? 'Uploading...' : 'Upload File'}</span>
                     <input type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" disabled={imageUploadLoading} />
                   </label>
-                  <span className="text-[11px] text-slate-400">
-                    {formData.images?.length || 0} images attached
-                  </span>
+                  <span className="text-xs text-slate-400">or</span>
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+                    <input
+                      type="url"
+                      placeholder="Paste image URL (https://...)"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddImageUrl();
+                        }
+                      }}
+                      className="flex-1 text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  {formData.images?.length || 0} image(s) attached. The first image will be set as primary.
                 </div>
 
                 {formData.images && formData.images.length > 0 && (

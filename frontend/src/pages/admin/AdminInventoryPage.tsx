@@ -15,6 +15,7 @@ import {
   ChevronRight,
   TrendingDown,
   TrendingUp,
+  ScanBarcode,
 } from 'lucide-react';
 import {
   fetchInventorySummary,
@@ -221,9 +222,19 @@ export const AdminInventoryPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {productsData?.items.map((prod) => (
                 <tr key={prod.id} className="hover:bg-slate-50 transition">
-                  <td className="py-3 px-3 font-semibold text-slate-900">
-                    {prod.name}
-                    <span className="block text-[11px] font-mono text-slate-400">{prod.model}</span>
+                  <td className="py-3 px-3">
+                    <p className="font-semibold text-slate-900">{prod.name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] font-mono text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded">
+                        Model: {prod.model}
+                      </span>
+                      {prod.part_number && (
+                        <span className="text-[10px] font-mono text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded flex items-center gap-1">
+                          <ScanBarcode className="w-2.5 h-2.5 text-amber-600" />
+                          Part #{prod.part_number}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-3 text-amber-600 font-medium">{prod.brand?.name}</td>
                   <td className="py-3 px-3 text-slate-600">{prod.battery_type}</td>

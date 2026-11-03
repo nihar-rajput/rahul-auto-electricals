@@ -17,7 +17,11 @@ import {
   CheckCircle,
   AlertCircle,
   Car,
+  ScanBarcode,
+  Camera as CameraIcon,
 } from 'lucide-react';
+import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
+import { CameraCaptureModal } from '../../components/CameraCaptureModal';
 import {
   fetchAdminProducts,
   createAdminProduct,
@@ -71,6 +75,11 @@ export const AdminProductsPage: React.FC = () => {
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [csvUploadLoading, setCsvUploadLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Barcode & Camera scanner states
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
+  const [barcodeTargetField, setBarcodeTargetField] = useState<'search' | 'part_number' | 'model'>('part_number');
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
 
   // Fetch Products
   const { data, isLoading } = useQuery({
@@ -217,6 +226,40 @@ export const AdminProductsPage: React.FC = () => {
     setImageUrlInput('');
   };
 
+  const handleOpenBarcodeScanner = (target: 'search' | 'part_number' | 'model') => {
+    setBarcodeTargetField(target);
+    setBarcodeModalOpen(true);
+  };
+
+  const handleBarcodeScanned = (scannedCode: string) => {
+    if (barcodeTargetField === 'search') {
+      setSearch(scannedCode);
+      setPage(1);
+    } else if (barcodeTargetField === 'part_number') {
+      setFormData((prev) => ({ ...prev, part_number: scannedCode }));
+    } else if (barcodeTargetField === 'model') {
+      setFormData((prev) => ({ ...prev, model: scannedCode }));
+    }
+  };
+
+  const handleCameraPhotoCaptured = async (file: File) => {
+    setImageUploadLoading(true);
+    try {
+      const url = await uploadProductImage(file);
+      setFormData((prev) => ({
+        ...prev,
+        images: [
+          ...(prev.images || []),
+          { id: '', image_url: url, is_primary: (prev.images?.length || 0) === 0, display_order: prev.images?.length || 0 },
+        ],
+      }));
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Photo upload failed');
+    } finally {
+      setImageUploadLoading(false);
+    }
+  };
+
   // CSV Import handler
   const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -317,9 +360,18 @@ export const AdminProductsPage: React.FC = () => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search by product name, model, part number..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="Search name, model, part no., barcode..."
+            className="w-full pl-9 pr-24 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none"
           />
+          <button
+            type="button"
+            onClick={() => handleOpenBarcodeScanner('search')}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition"
+            title="Scan Battery Barcode to Search"
+          >
+            <ScanBarcode className="w-3.5 h-3.5" />
+            <span>Scan</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -377,9 +429,17 @@ export const AdminProductsPage: React.FC = () => {
                         </div>
                         <div>
                           <p className="font-semibold text-slate-900 leading-snug">{prod.name}</p>
-                          <p className="text-[11px] font-mono text-slate-400">
-                            {prod.model} {prod.part_number ? `• ${prod.part_number}` : ''}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            <span className="text-[10px] font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                              Model: {prod.model}
+                            </span>
+                            {prod.part_number && (
+                              <span className="text-[10px] font-mono text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                <ScanBarcode className="w-2.5 h-2.5 text-amber-600" />
+                                Part/Barcode: {prod.part_number}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -557,28 +617,58 @@ export const AdminProductsPage: React.FC = () => {
               </div>
 
               {/* Model & Part Number */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-100">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Model Number *</label>
-                  <input
-                    type="text"
-                    value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    placeholder="e.g. PZ-38B20R"
-                    required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-800 text-xs">Model Number *</label>
+                    <span className="text-[10px] text-slate-500 font-medium">Shared across same spec</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.model}
+                      onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                      placeholder="e.g. PZ-38B20R, DIN55"
+                      required
+                      className="w-full pl-3 pr-20 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBarcodeScanner('model')}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold flex items-center gap-1 transition"
+                      title="Scan Model Barcode"
+                    >
+                      <ScanBarcode className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Scan</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">General battery line (e.g., PZ-38B20R)</p>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Part Number (Optional)</label>
-                  <input
-                    type="text"
-                    value={formData.part_number || ''}
-                    onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
-                    placeholder="e.g. PZ38B20R-IND"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-800 text-xs">Part Number / Serial Barcode</label>
+                    <span className="text-[10px] text-amber-700 font-bold">Unique per product</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.part_number || ''}
+                      onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
+                      placeholder="e.g. PZ38B-2026-0041"
+                      className="w-full pl-3 pr-20 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBarcodeScanner('part_number')}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition"
+                      title="Scan Unique Battery Barcode"
+                    >
+                      <ScanBarcode className="w-3.5 h-3.5" />
+                      <span>Scan</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">Individual unit barcode for tracking stock</p>
                 </div>
               </div>
 
@@ -702,12 +792,40 @@ export const AdminProductsPage: React.FC = () => {
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Product Images</label>
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* Live Web Camera Viewfinder */}
+                  <button
+                    type="button"
+                    onClick={() => setCameraModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition font-bold text-xs shadow-xs"
+                    title="Open Live Camera Viewfinder to Snap Photo"
+                  >
+                    <CameraIcon className="w-4 h-4" />
+                    <span>Snap Photo</span>
+                  </button>
+
+                  {/* Native Mobile Camera Button */}
                   <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition font-medium text-xs">
-                    <ImageIcon className="w-4 h-4 text-amber-600" />
+                    <CameraIcon className="w-4 h-4 text-slate-600" />
+                    <span>Phone Camera</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                      disabled={imageUploadLoading}
+                    />
+                  </label>
+
+                  {/* Regular File Upload */}
+                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition font-medium text-xs">
+                    <ImageIcon className="w-4 h-4 text-slate-600" />
                     <span>{imageUploadLoading ? 'Uploading...' : 'Upload File'}</span>
                     <input type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" disabled={imageUploadLoading} />
                   </label>
+
                   <span className="text-xs text-slate-400">or</span>
+
                   <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
                     <input
                       type="url"
@@ -732,7 +850,7 @@ export const AdminProductsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1">
-                  {formData.images?.length || 0} image(s) attached. The first image will be set as primary.
+                  {formData.images?.length || 0} image(s) attached. You can take live photos with your webcam or mobile camera.
                 </div>
 
                 {formData.images && formData.images.length > 0 && (
@@ -792,6 +910,27 @@ export const AdminProductsPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={barcodeModalOpen}
+        onClose={() => setBarcodeModalOpen(false)}
+        onScan={handleBarcodeScanned}
+        title={
+          barcodeTargetField === 'search'
+            ? 'Scan Battery Barcode to Search'
+            : barcodeTargetField === 'part_number'
+            ? 'Scan Part Number / Serial Barcode'
+            : 'Scan Model Number Barcode'
+        }
+        subtitle="Point camera at any 1D/2D battery barcode, QR code, or serial label"
+      />
+
+      {/* Live Camera Capture Modal */}
+      <CameraCaptureModal
+        isOpen={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={handleCameraPhotoCaptured}
+      />
     </div>
   );
 };

@@ -15,7 +15,9 @@ import {
   User,
   Phone,
   FileText,
+  ScanBarcode,
 } from 'lucide-react';
+import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import {
   fetchAdminSales,
   recordSale,
@@ -47,7 +49,27 @@ export const AdminSalesPage: React.FC = () => {
     { product_id: string; product_name: string; quantity: number; unit_price: number; max_stock: number }[]
   >([]);
 
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleBarcodeScanned = (scannedCode: string) => {
+    const code = scannedCode.trim().toLowerCase();
+    const match = productsData?.items.find(
+      (p) =>
+        (p.part_number && p.part_number.toLowerCase() === code) ||
+        p.model.toLowerCase() === code ||
+        p.name.toLowerCase().includes(code)
+    );
+    if (match) {
+      setSelectedProductId(match.id);
+      setUnitPrice(Number(match.price));
+      setSaleQuantity(1);
+      setFeedback({ type: 'success', text: `Scanned & selected: ${match.name} (${match.model})` });
+      setTimeout(() => setFeedback(null), 3000);
+    } else {
+      alert(`No battery found matching barcode "${scannedCode}"`);
+    }
+  };
 
   // Fetch sales
   const { data: salesData, isLoading } = useQuery({
@@ -398,19 +420,28 @@ export const AdminSalesPage: React.FC = () => {
                 Add Battery to Invoice
               </label>
 
-              <div>
+              <div className="flex gap-2">
                 <select
                   value={selectedProductId}
                   onChange={(e) => handleProductSelect(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg outline-none"
+                  className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg outline-none text-xs"
                 >
                   <option value="">-- Choose Battery Model from Inventory --</option>
                   {productsData?.items.map((p) => (
                     <option key={p.id} value={p.id} disabled={p.quantity <= 0}>
-                      {p.name} ({p.model}) — In Stock: {p.quantity} units (₹{p.price})
+                      {p.name} ({p.model} {p.part_number ? `• Part #${p.part_number}` : ''}) — In Stock: {p.quantity} units (₹{p.price})
                     </option>
                   ))}
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setBarcodeModalOpen(true)}
+                  className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs transition"
+                  title="Scan Battery Barcode to Auto-Select"
+                >
+                  <ScanBarcode className="w-4 h-4" />
+                  <span>Scan</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -512,6 +543,14 @@ export const AdminSalesPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Barcode Scanner Modal for Sales */}
+      <BarcodeScannerModal
+        isOpen={barcodeModalOpen}
+        onClose={() => setBarcodeModalOpen(false)}
+        onScan={handleBarcodeScanned}
+        title="Scan Battery to Add to Sale"
+        subtitle="Point camera at the battery's barcode or serial label"
+      />
     </div>
   );
 };

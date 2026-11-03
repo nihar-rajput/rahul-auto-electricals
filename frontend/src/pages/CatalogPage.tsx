@@ -10,7 +10,9 @@ import {
   ChevronRight,
   RotateCcw,
   BatteryCharging,
+  ScanBarcode,
 } from 'lucide-react';
+import { BarcodeScannerModal } from '../components/BarcodeScannerModal';
 import { fetchPublicProducts, fetchBrands } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
 import { WebsiteSettings } from '../types';
@@ -34,6 +36,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ settings }) => {
   );
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
 
   // Sync state with URL params
   useEffect(() => {
@@ -220,8 +223,17 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ settings }) => {
                   setPage(1);
                 }}
                 placeholder={t('catalog.searchPlaceholder')}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                className="w-full pl-9 pr-20 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
               />
+              <button
+                type="button"
+                onClick={() => setBarcodeModalOpen(true)}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition"
+                title="Scan Battery Barcode / QR to Find"
+              >
+                <ScanBarcode className="w-3.5 h-3.5" />
+                <span>Scan</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -372,6 +384,17 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ settings }) => {
           )}
         </div>
       </div>
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={barcodeModalOpen}
+        onClose={() => setBarcodeModalOpen(false)}
+        onScan={(scannedCode) => {
+          setSearchInput(scannedCode);
+          setPage(1);
+        }}
+        title="Scan Battery Barcode / QR Code"
+        subtitle="Point camera at any battery barcode to instantly lookup specifications"
+      />
     </div>
   );
 };

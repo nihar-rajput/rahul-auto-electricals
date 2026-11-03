@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rahul_auto_db
+    environment:
+      POSTGRES_USER: rahul_admin
+      POSTGRES_PASSWORD: rahul_password_2026
+      POSTGRES_DB: rahul_auto_electricals
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rahul_auto_backend
+    environment:
+      DATABASE_URL: postgresql://rahul_admin:rahul_password_2026@db:5432/rahul_auto_electricals
+      SECRET_KEY: super-secret-rahul-auto-electricals-jwt-key-change-in-prod-2026
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rahul_auto_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

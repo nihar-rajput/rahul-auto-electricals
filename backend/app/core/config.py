@@ -24,7 +24,10 @@ class Settings(BaseSettings):
             return "sqlite:///./rahul_auto.db"
         # Support standard Render/Supabase postgres:// format
         if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
+            return v.replace("postgres://", "postgresql+psycopg2://", 1)
+        # SQLAlchemy 2.0 defaults postgresql:// to psycopg v3; ensure psycopg2 compatibility if unspecified
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
         return v
 
     # CORS

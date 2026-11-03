@@ -74,8 +74,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* Brand header */}
         <div className="px-3 pb-6 border-b border-slate-800">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold shadow-xs">
-              <Zap className="w-5 h-5 fill-current" />
+            <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-xs">
+              <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="block font-display font-bold text-sm text-white leading-tight">

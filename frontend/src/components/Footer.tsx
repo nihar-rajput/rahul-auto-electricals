@@ -55,9 +55,9 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Col 1: About */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950">
-              <Zap className="w-5 h-5 fill-current" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 shadow-sm">
+              <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-display font-bold text-base text-white">
               Rahul Auto Electricals

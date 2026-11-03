@@ -83,8 +83,8 @@ export const LoginPage: React.FC = () => {
           <span>Back to Store Catalog</span>
         </Link>
 
-        <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold mx-auto shadow-md">
-          <Shield className="w-6 h-6" />
+        <div className="w-20 h-20 rounded-2xl bg-white p-2 flex items-center justify-center mx-auto shadow-xl border border-slate-700">
+          <img src="/logo-icon.png" alt="Rahul Auto Electricals" className="w-full h-full object-contain" />
         </div>
 
         <h1 className="text-2xl font-bold font-display text-white">

@@ -65,10 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({ settings }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Business Name */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 shadow-sm group-hover:scale-105 transition-transform">
-              <Zap className="w-6 h-6 fill-current" />
-            </div>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img
+              src="/logo.png"
+              alt="Rahul Auto Electricals Logo"
+              className="h-11 w-auto object-contain group-hover:scale-105 transition-transform shrink-0"
+            />
             <div>
               <span className="block font-display font-bold text-lg leading-tight text-slate-900 group-hover:text-amber-600 transition">
                 Rahul Auto Electricals

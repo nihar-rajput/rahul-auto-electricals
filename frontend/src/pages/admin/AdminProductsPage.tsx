@@ -19,6 +19,7 @@ import {
   Car,
   ScanBarcode,
   Camera as CameraIcon,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { BarcodeScannerModal } from '../../components/BarcodeScannerModal';
 import { CameraCaptureModal } from '../../components/CameraCaptureModal';
@@ -288,6 +289,100 @@ export const AdminProductsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = [
+      'Name',
+      'Brand',
+      'Category',
+      'Model',
+      'Part Number',
+      'Battery Type',
+      'Price',
+      'Quantity',
+      'Voltage',
+      'Ah Capacity',
+      'Warranty',
+      'Guarantee Details',
+      'Low Stock Threshold',
+      'Stock Visibility Mode',
+      'Is Published',
+      'Description',
+    ];
+    const sampleRows = [
+      [
+        'PowerZone PZ-38B20R Car Battery (35Ah)',
+        'PowerZone',
+        'Batteries',
+        'PZ-38B20R',
+        'PZ-38B-2026-0001',
+        'Car',
+        '3499.00',
+        '15',
+        '12V',
+        '35 Ah',
+        '48 Months (24 Free + 24 Pro-rata)',
+        '24 Months Free Replacement',
+        '5',
+        'EXACT_COUNT',
+        'TRUE',
+        'Maintenance-free car battery for Maruti Suzuki, Hyundai, and Tata compact cars.',
+      ],
+      [
+        'Amaron Pro Rider 5Ah Two-Wheeler Battery',
+        'Amaron',
+        'Batteries',
+        'AP-BTZ5',
+        'AM-5AH-2026-0012',
+        'Bike',
+        '1350.00',
+        '25',
+        '12V',
+        '5 Ah',
+        '48 Months (24 Free + 24 Pro-rata)',
+        '24 Months Free Replacement',
+        '8',
+        'EXACT_COUNT',
+        'TRUE',
+        'VRLA factory charged bike battery for Honda Activa, Hero Splendor, and Bajaj Pulsar.',
+      ],
+      [
+        'Exide Inva Tubular 150Ah Inverter Battery',
+        'Exide',
+        'Batteries',
+        'IT500',
+        'EX-150-2026-0099',
+        'Inverter',
+        '14500.00',
+        '6',
+        '12V',
+        '150 Ah',
+        '60 Months (36 Free + 24 Pro-rata)',
+        '36 Months Free Replacement',
+        '2',
+        'EXACT_COUNT',
+        'TRUE',
+        'Heavy duty tall tubular deep cycle battery for domestic home and office inverter backup.',
+      ],
+    ];
+
+    const csvContent =
+      '\uFEFF' +
+      [
+        headers.join(','),
+        ...sampleRows.map((r) => r.map((f) => `"${f.replace(/"/g, '""')}"`).join(',')),
+      ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'rahul_auto_battery_import_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.model || !formData.brand_id || !formData.category_id) {
@@ -320,6 +415,16 @@ export const AdminProductsPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Download Sample Template */}
+          <button
+            onClick={handleDownloadTemplate}
+            title="Download sample Excel/CSV template with real battery rows"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs transition"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-amber-700" />
+            <span>Sample Template</span>
+          </button>
+
           {/* CSV Import */}
           <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-xs cursor-pointer transition">
             <Upload className="w-3.5 h-3.5 text-slate-500" />

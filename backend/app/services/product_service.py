@@ -421,25 +421,89 @@ def export_products_csv(db: Session) -> str:
     return output.getvalue()
 
 
+def _normalize_battery_type(val: str) -> str:
+    """Normalize common battery type synonyms to schema-compliant values."""
+    v = val.lower().strip()
+    if any(k in v for k in ["bike", "motorcycle", "scooter", "two", "2-w", "2w"]):
+        return "Bike"
+    if any(k in v for k in ["truck", "bus", "heavy", "hcv"]):
+        return "Truck"
+    if any(k in v for k in ["inverter", "ups", "home", "solar", "tubular"]):
+        return "Inverter"
+    if any(k in v for k in ["commercial", "lcv", "auto", "rickshaw", "tractor"]):
+        return "Commercial"
+    if "other" in v:
+        return "Other"
+    return "Car"
+
+
+def _clean_numeric_str(val: str) -> str:
+    """Remove currency symbols, commas, and formatting from numeric strings."""
+    if not val:
+        return ""
+    return re.sub(r"[^0-9.]", "", val)
+
+
 def import_products_csv(db: Session, csv_content: str, admin_id: Optional[str] = None) -> Dict[str, Any]:
-    """Import products from CSV string, handling brands and categories automatically."""
+    """Import products from CSV string with flexible header alias matching and auto-brand/category creation."""
     reader = csv.DictReader(io.StringIO(csv_content))
     created = 0
     updated = 0
     errors = []
 
-    for idx, row in enumerate(reader, start=2):
-        try:
-            name = row.get("Name", "").strip()
-            brand_name = row.get("Brand", "").strip() or "PowerZone"
-            model = row.get("Model", "").strip() or name
-            battery_type = row.get("Battery Type", "").strip() or "Car"
-            price_val = Decimal(row.get("Price", "0").replace(",", "").strip() or "0")
-            quantity_val = int(row.get("Quantity", "0").strip() or "0")
+    def get_field(norm_row: Dict[str, str], aliases: List[str], default: str = "") -> str:
+        for alias in aliases:
+            if alias in norm_row and norm_row[alias]:
+                return norm_row[alias]
+        return default
 
-            if not name:
-                errors.append(f"Row {idx}: Name is required")
+    for idx, raw_row in enumerate(reader, start=2):
+        try:
+            # Create a normalized lowercase alphanumeric key lookup
+            norm = {}
+            for k, v in raw_row.items():
+                if k is not None:
+                    clean_k = re.sub(r"[^a-z0-9]", "", str(k).lower().strip())
+                    norm[clean_k] = str(v).strip() if v is not None else ""
+
+            name = get_field(norm, ["name", "productname", "batteryname", "itemname", "title"])
+            brand_name = get_field(norm, ["brand", "brandname", "company", "make", "manufacturer"], "PowerZone")
+            model = get_field(norm, ["model", "modelno", "modelnumber", "batterymodel", "code"])
+            part_number = get_field(norm, ["partnumber", "partno", "barcode", "serial", "serialno", "serialnumber", "sku"]) or None
+            
+            if not name and model:
+                name = f"{brand_name} {model} Battery"
+            elif not name and not model:
+                errors.append(f"Row {idx}: Name or Model is required")
                 continue
+
+            if not model:
+                model = name
+
+            raw_type = get_field(norm, ["batterytype", "type", "vehicletype", "application", "vehicle"], "Car")
+            battery_type = _normalize_battery_type(raw_type)
+
+            price_str = _clean_numeric_str(get_field(norm, ["price", "mrp", "rate", "cost", "amount", "sellingprice"], "0"))
+            price_val = Decimal(price_str or "0")
+
+            qty_str = _clean_numeric_str(get_field(norm, ["quantity", "qty", "stock", "stockquantity", "count"], "0")).split(".")[0]
+            quantity_val = int(qty_str or "0")
+
+            voltage = get_field(norm, ["voltage", "volt", "volts"], "12V") or None
+            ah_capacity = get_field(norm, ["ahcapacity", "ah", "capacity", "amphour"]) or None
+            warranty_duration = get_field(norm, ["warranty", "warrantyduration", "warrantyperiod", "months"]) or None
+            guarantee_details = get_field(norm, ["guaranteedetails", "guarantee", "replacement"]) or None
+
+            thresh_str = _clean_numeric_str(get_field(norm, ["lowstockthreshold", "lowstock", "minstock", "threshold"], "5")).split(".")[0]
+            low_stock_threshold = int(thresh_str or "5")
+
+            mode_str = get_field(norm, ["stockvisibilitymode", "stockvisibility", "visibility"], "EXACT_COUNT")
+            stock_visibility_mode = "IN_STOCK_BADGE" if "badge" in mode_str.lower() else "EXACT_COUNT"
+
+            pub_str = get_field(norm, ["ispublished", "published", "status", "active"], "TRUE")
+            is_published = False if pub_str.lower() in ["false", "0", "no", "draft", "hide", "inactive"] else True
+
+            description = get_field(norm, ["description", "desc", "details", "specs"]) or None
 
             # Ensure brand
             brand = db.query(Brand).filter(func.lower(Brand.name) == brand_name.lower()).first()
@@ -449,31 +513,74 @@ def import_products_csv(db: Session, csv_content: str, admin_id: Optional[str] =
                 db.flush()
 
             # Ensure category
-            category_name = row.get("Category", "").strip() or "Batteries"
+            category_name = get_field(norm, ["category", "categoryname"], "Batteries")
             category = db.query(ProductCategory).filter(func.lower(ProductCategory.name) == category_name.lower()).first()
             if not category:
                 category = ProductCategory(name=category_name, slug=generate_slug(category_name))
                 db.add(category)
                 db.flush()
 
-            # Look up product by name or model
-            existing = (
-                db.query(Product)
-                .filter(Product.deleted_at.is_(None))
-                .filter(or_(Product.name == name, Product.model == model))
-                .first()
-            )
+            # Look up product by part number (if given), model, or exact name
+            existing = None
+            if part_number:
+                existing = (
+                    db.query(Product)
+                    .filter(Product.deleted_at.is_(None))
+                    .filter(Product.part_number == part_number)
+                    .first()
+                )
+            if not existing and model:
+                existing = (
+                    db.query(Product)
+                    .filter(Product.deleted_at.is_(None))
+                    .filter(Product.model == model)
+                    .first()
+                )
+            if not existing:
+                existing = (
+                    db.query(Product)
+                    .filter(Product.deleted_at.is_(None))
+                    .filter(Product.name == name)
+                    .first()
+                )
 
             if existing:
                 existing.brand_id = brand.id
                 existing.category_id = category.id
+                existing.name = name
                 existing.price = price_val
                 existing.battery_type = battery_type
-                existing.part_number = row.get("Part Number", existing.part_number)
-                existing.voltage = row.get("Voltage", existing.voltage)
-                existing.ah_capacity = row.get("Ah Capacity", existing.ah_capacity)
-                existing.warranty_duration = row.get("Warranty", existing.warranty_duration)
-                existing.description = row.get("Description", existing.description)
+                if part_number:
+                    existing.part_number = part_number
+                if voltage:
+                    existing.voltage = voltage
+                if ah_capacity:
+                    existing.ah_capacity = ah_capacity
+                if warranty_duration:
+                    existing.warranty_duration = warranty_duration
+                if guarantee_details:
+                    existing.guarantee_details = guarantee_details
+                if description:
+                    existing.description = description
+                existing.low_stock_threshold = low_stock_threshold
+                existing.stock_visibility_mode = stock_visibility_mode
+                existing.is_published = is_published
+
+                # If quantity changed, log inventory adjustment
+                if quantity_val != existing.quantity and quantity_val > 0:
+                    diff = quantity_val - existing.quantity
+                    existing.quantity = quantity_val
+                    db.add(
+                        InventoryMovement(
+                            product_id=existing.id,
+                            admin_id=admin_id,
+                            movement_type="RESTOCK" if diff > 0 else "ADJUSTMENT",
+                            quantity_change=diff,
+                            previous_quantity=existing.quantity - diff,
+                            new_quantity=quantity_val,
+                            reason=f"Excel/CSV Import update ({'+' if diff > 0 else ''}{diff})",
+                        )
+                    )
                 updated += 1
             else:
                 new_prod = Product(
@@ -482,30 +589,33 @@ def import_products_csv(db: Session, csv_content: str, admin_id: Optional[str] =
                     brand_id=brand.id,
                     category_id=category.id,
                     model=model,
-                    part_number=row.get("Part Number"),
+                    part_number=part_number,
                     battery_type=battery_type,
-                    description=row.get("Description"),
+                    description=description,
                     price=price_val,
                     quantity=quantity_val,
-                    voltage=row.get("Voltage"),
-                    ah_capacity=row.get("Ah Capacity"),
-                    warranty_duration=row.get("Warranty"),
-                    guarantee_details=row.get("Guarantee Details"),
-                    low_stock_threshold=int(row.get("Low Stock Threshold", "5").strip() or "5"),
-                    is_published=True,
+                    voltage=voltage,
+                    ah_capacity=ah_capacity,
+                    warranty_duration=warranty_duration,
+                    guarantee_details=guarantee_details,
+                    low_stock_threshold=low_stock_threshold,
+                    stock_visibility_mode=stock_visibility_mode,
+                    is_published=is_published,
                 )
                 db.add(new_prod)
                 db.flush()
                 if quantity_val > 0:
-                    db.add(InventoryMovement(
-                        product_id=new_prod.id,
-                        admin_id=admin_id,
-                        movement_type="RESTOCK",
-                        quantity_change=quantity_val,
-                        previous_quantity=0,
-                        new_quantity=quantity_val,
-                        reason="CSV Import initial stock",
-                    ))
+                    db.add(
+                        InventoryMovement(
+                            product_id=new_prod.id,
+                            admin_id=admin_id,
+                            movement_type="RESTOCK",
+                            quantity_change=quantity_val,
+                            previous_quantity=0,
+                            new_quantity=quantity_val,
+                            reason="Excel/CSV Import initial stock",
+                        )
+                    )
                 created += 1
 
         except Exception as e:

@@ -94,11 +94,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, settings }) =
                 <span className="truncate max-w-[150px]">{product.warranty_duration}</span>
               </span>
             )}
-            {product.part_number && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-500">
-                #{product.part_number}
-              </span>
-            )}
           </div>
         </div>
 

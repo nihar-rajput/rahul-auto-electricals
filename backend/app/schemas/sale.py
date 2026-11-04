@@ -8,6 +8,7 @@ class SaleItemCreate(BaseModel):
     product_id: str
     quantity: int = Field(..., gt=0)
     unit_price: Decimal = Field(..., ge=0)
+    part_number: Optional[str] = None
 
 
 class SaleItemResponse(BaseModel):
@@ -15,6 +16,7 @@ class SaleItemResponse(BaseModel):
     product_id: str
     product_name: Optional[str] = None
     product_model: Optional[str] = None
+    part_number: Optional[str] = None
     quantity: int
     unit_price: Decimal
     subtotal: Decimal

@@ -393,7 +393,7 @@ def export_products_csv(db: Session) -> str:
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Name", "Brand", "Category", "Model", "Part Number", "Battery Type",
+        "Name", "Brand", "Category", "Model", "Battery Type",
         "Price", "Quantity", "Warranty",
         "Guarantee Details", "Low Stock Threshold", "Stock Visibility Mode", "Is Published", "Description"
     ])
@@ -404,7 +404,6 @@ def export_products_csv(db: Session) -> str:
             p.brand.name if p.brand else "",
             p.category.name if p.category else "",
             p.model,
-            p.part_number or "",
             p.battery_type,
             str(p.price),
             p.quantity,

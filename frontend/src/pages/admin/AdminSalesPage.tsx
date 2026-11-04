@@ -43,20 +43,36 @@ export const AdminSalesPage: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [saleQuantity, setSaleQuantity] = useState<number | string>(1);
   const [unitPrice, setUnitPrice] = useState<number | string>(0);
+  const [itemPartNumber, setItemPartNumber] = useState('');
 
   // Sale items list for the new sale
   const [saleItems, setSaleItems] = useState<
-    { product_id: string; product_name: string; quantity: number; unit_price: number; max_stock: number }[]
+    {
+      product_id: string;
+      product_name: string;
+      quantity: number;
+      unit_price: number;
+      max_stock: number;
+      part_number?: string;
+    }[]
   >([]);
 
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
+  const [barcodeTarget, setBarcodeTarget] = useState<'product' | 'part_number'>('product');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleBarcodeScanned = (scannedCode: string) => {
+    if (barcodeTarget === 'part_number') {
+      setItemPartNumber(scannedCode);
+      setBarcodeModalOpen(false);
+      setFeedback({ type: 'success', text: `Scanned Serial / Part #: ${scannedCode}` });
+      setTimeout(() => setFeedback(null), 3000);
+      return;
+    }
+
     const code = scannedCode.trim().toLowerCase();
     const match = productsData?.items.find(
       (p) =>
-        (p.part_number && p.part_number.toLowerCase() === code) ||
         p.model.toLowerCase() === code ||
         p.name.toLowerCase().includes(code)
     );
@@ -64,6 +80,7 @@ export const AdminSalesPage: React.FC = () => {
       setSelectedProductId(match.id);
       setUnitPrice(Number(match.price));
       setSaleQuantity(1);
+      setBarcodeModalOpen(false);
       setFeedback({ type: 'success', text: `Scanned & selected: ${match.name} (${match.model})` });
       setTimeout(() => setFeedback(null), 3000);
     } else {
@@ -102,6 +119,7 @@ export const AdminSalesPage: React.FC = () => {
           product_id: item.product_id,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          part_number: item.part_number,
         })),
       }),
     onSuccess: () => {
@@ -168,12 +186,14 @@ export const AdminSalesPage: React.FC = () => {
         quantity: qty,
         unit_price: price,
         max_stock: prod.quantity,
+        part_number: itemPartNumber.trim() || undefined,
       },
     ]);
 
     setSelectedProductId('');
     setSaleQuantity(1);
     setUnitPrice(0);
+    setItemPartNumber('');
   };
 
   const totalSaleAmount = saleItems.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
@@ -249,7 +269,7 @@ export const AdminSalesPage: React.FC = () => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search customer, phone, or sale ID..."
+              placeholder="Search by customer, phone, invoice #, or battery serial / part #..."
               className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md outline-none"
             />
           </div>
@@ -328,6 +348,11 @@ export const AdminSalesPage: React.FC = () => {
                       {sale.items?.map((item) => (
                         <div key={item.id} className="text-[11px] text-slate-700">
                           <span className="font-semibold">{item.quantity}x</span> {item.product_name}
+                          {item.part_number && (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 font-mono text-[10px] font-semibold">
+                              SN: {item.part_number}
+                            </span>
+                          )}
                           <span className="text-slate-400 ml-1">(₹{Number(item.unit_price).toLocaleString('en-IN')})</span>
                         </div>
                       ))}
@@ -432,19 +457,53 @@ export const AdminSalesPage: React.FC = () => {
                   <option value="">-- Choose Battery Model from Inventory --</option>
                   {productsData?.items.map((p) => (
                     <option key={p.id} value={p.id} disabled={p.quantity <= 0}>
-                      {p.name} ({p.model} {p.part_number ? `• Part #${p.part_number}` : ''}) — In Stock: {p.quantity} units (₹{p.price})
+                      {p.name} ({p.model}) — In Stock: {p.quantity} units (₹{p.price})
                     </option>
                   ))}
                 </select>
                 <button
                   type="button"
-                  onClick={() => setBarcodeModalOpen(true)}
+                  onClick={() => {
+                    setBarcodeTarget('product');
+                    setBarcodeModalOpen(true);
+                  }}
                   className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 shadow-xs transition"
-                  title="Scan Battery Barcode to Auto-Select"
+                  title="Scan Battery Model Barcode"
                 >
                   <ScanBarcode className="w-4 h-4" />
-                  <span>Scan</span>
+                  <span>Scan Model</span>
                 </button>
+              </div>
+
+              {/* Part Number / Serial Barcode for Sold Battery */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">
+                    Part Number / Unit Serial Barcode (For Warranty Tracking)
+                  </label>
+                  <span className="text-[10px] text-amber-700 font-bold">Recorded for sale</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={itemPartNumber}
+                    onChange={(e) => setItemPartNumber(e.target.value)}
+                    placeholder="Scan or enter battery serial number (e.g. PZ-2026-0041)"
+                    className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg outline-none font-mono text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBarcodeTarget('part_number');
+                      setBarcodeModalOpen(true);
+                    }}
+                    className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition shrink-0"
+                    title="Scan Battery Serial Barcode"
+                  >
+                    <ScanBarcode className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Scan Serial</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -493,7 +552,14 @@ export const AdminSalesPage: React.FC = () => {
                   {saleItems.map((item, idx) => (
                     <div key={idx} className="p-3 flex items-center justify-between">
                       <div>
-                        <p className="font-semibold text-slate-800">{item.product_name}</p>
+                        <p className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span>{item.product_name}</span>
+                          {item.part_number && (
+                            <span className="font-mono text-[10px] text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-bold">
+                              SN: {item.part_number}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-[11px] text-slate-400">
                           {item.quantity} x ₹{item.unit_price} = ₹{item.quantity * item.unit_price}
                         </p>
@@ -555,8 +621,16 @@ export const AdminSalesPage: React.FC = () => {
         isOpen={barcodeModalOpen}
         onClose={() => setBarcodeModalOpen(false)}
         onScan={handleBarcodeScanned}
-        title="Scan Battery to Add to Sale"
-        subtitle="Point camera at the battery's barcode or serial label"
+        title={
+          barcodeTarget === 'part_number'
+            ? 'Scan Battery Serial / Part Number'
+            : 'Scan Battery Model Barcode'
+        }
+        subtitle={
+          barcodeTarget === 'part_number'
+            ? "Point camera at the individual battery's serial barcode"
+            : 'Point camera at the battery model barcode'
+        }
       />
     </div>
   );

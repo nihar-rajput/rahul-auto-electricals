@@ -56,7 +56,6 @@ export const AdminProductsPage: React.FC = () => {
     brand_id: '',
     category_id: '',
     model: '',
-    part_number: '',
     battery_type: 'Car',
     description: '',
     price: '' as any,
@@ -77,7 +76,7 @@ export const AdminProductsPage: React.FC = () => {
 
   // Barcode & Camera scanner states
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
-  const [barcodeTargetField, setBarcodeTargetField] = useState<'search' | 'part_number' | 'model'>('part_number');
+  const [barcodeTargetField, setBarcodeTargetField] = useState<'search' | 'model'>('model');
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
 
   // Fetch Products
@@ -148,7 +147,6 @@ export const AdminProductsPage: React.FC = () => {
       brand_id: brands[0]?.id || '',
       category_id: categories[0]?.id || '',
       model: '',
-      part_number: '',
       battery_type: 'Car',
       description: '',
       price: '' as any,
@@ -171,7 +169,6 @@ export const AdminProductsPage: React.FC = () => {
       brand_id: prod.brand_id,
       category_id: prod.category_id,
       model: prod.model,
-      part_number: prod.part_number || '',
       battery_type: prod.battery_type,
       description: prod.description || '',
       price: Number(prod.price),
@@ -221,7 +218,7 @@ export const AdminProductsPage: React.FC = () => {
     setImageUrlInput('');
   };
 
-  const handleOpenBarcodeScanner = (target: 'search' | 'part_number' | 'model') => {
+  const handleOpenBarcodeScanner = (target: 'search' | 'model') => {
     setBarcodeTargetField(target);
     setBarcodeModalOpen(true);
   };
@@ -230,8 +227,6 @@ export const AdminProductsPage: React.FC = () => {
     if (barcodeTargetField === 'search') {
       setSearch(scannedCode);
       setPage(1);
-    } else if (barcodeTargetField === 'part_number') {
-      setFormData((prev) => ({ ...prev, part_number: scannedCode }));
     } else if (barcodeTargetField === 'model') {
       setFormData((prev) => ({ ...prev, model: scannedCode }));
     }
@@ -289,7 +284,6 @@ export const AdminProductsPage: React.FC = () => {
       'Brand',
       'Category',
       'Model',
-      'Part Number',
       'Battery Type',
       'Price',
       'Quantity',
@@ -306,7 +300,6 @@ export const AdminProductsPage: React.FC = () => {
         'PowerZone',
         'Batteries',
         'PZ-38B20R',
-        'PZ-38B-2026-0001',
         'Car',
         '3499.00',
         '15',
@@ -322,7 +315,6 @@ export const AdminProductsPage: React.FC = () => {
         'Amaron',
         'Batteries',
         'AP-BTZ5',
-        'AM-5AH-2026-0012',
         'Bike',
         '1350.00',
         '25',
@@ -338,7 +330,6 @@ export const AdminProductsPage: React.FC = () => {
         'Exide',
         'Batteries',
         'IT500',
-        'EX-150-2026-0099',
         'Inverter',
         '14500.00',
         '6',
@@ -533,12 +524,6 @@ export const AdminProductsPage: React.FC = () => {
                             <span className="text-[10px] font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
                               Model: {prod.model}
                             </span>
-                            {prod.part_number && (
-                              <span className="text-[10px] font-mono text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                <ScanBarcode className="w-2.5 h-2.5 text-amber-600" />
-                                Part/Barcode: {prod.part_number}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -716,59 +701,30 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Model & Part Number */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-100">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block font-semibold text-slate-800 text-xs">Model Number *</label>
-                    <span className="text-[10px] text-slate-500 font-medium">Shared across same spec</span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.model}
-                      onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                      placeholder="e.g. PZ-38B20R, DIN55"
-                      required
-                      className="w-full pl-3 pr-20 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBarcodeScanner('model')}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold flex items-center gap-1 transition"
-                      title="Scan Model Barcode"
-                    >
-                      <ScanBarcode className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Scan</span>
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">General battery line (e.g., PZ-38B20R)</p>
+              {/* Model Number */}
+              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-800 text-xs">Model Number *</label>
+                  <span className="text-[10px] text-slate-500 font-medium">Battery spec line (e.g. PZ-38B20R, DIN55, ML35R)</span>
                 </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block font-semibold text-slate-800 text-xs">Part Number / Serial Barcode</label>
-                    <span className="text-[10px] text-amber-700 font-bold">Unique per product</span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.part_number || ''}
-                      onChange={(e) => setFormData({ ...formData, part_number: e.target.value })}
-                      placeholder="e.g. PZ38B-2026-0041"
-                      className="w-full pl-3 pr-20 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBarcodeScanner('part_number')}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition"
-                      title="Scan Unique Battery Barcode"
-                    >
-                      <ScanBarcode className="w-3.5 h-3.5" />
-                      <span>Scan</span>
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Individual unit barcode for tracking stock</p>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    placeholder="e.g. PZ-38B20R, DIN55, ML35R"
+                    required
+                    className="w-full pl-3 pr-20 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleOpenBarcodeScanner('model')}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition"
+                    title="Scan Model Barcode"
+                  >
+                    <ScanBarcode className="w-3.5 h-3.5" />
+                    <span>Scan</span>
+                  </button>
                 </div>
               </div>
 
@@ -1013,8 +969,6 @@ export const AdminProductsPage: React.FC = () => {
         title={
           barcodeTargetField === 'search'
             ? 'Scan Battery Barcode to Search'
-            : barcodeTargetField === 'part_number'
-            ? 'Scan Part Number / Serial Barcode'
             : 'Scan Model Number Barcode'
         }
         subtitle="Point camera at any 1D/2D battery barcode, QR code, or serial label"

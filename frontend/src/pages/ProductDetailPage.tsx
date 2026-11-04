@@ -234,15 +234,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ settings }
                 </dd>
               </div>
 
-              {product.part_number && (
-                <div className="p-3 bg-white border border-slate-200 rounded-lg">
-                  <dt className="text-slate-400 font-medium">Part / Serial</dt>
-                  <dd className="font-bold text-slate-900 font-mono mt-0.5">
-                    {product.part_number}
-                  </dd>
-                </div>
-              )}
-
               {product.guarantee_details && (
                 <div className="col-span-2 sm:col-span-3 p-3 bg-white border border-slate-200 rounded-lg">
                   <dt className="text-slate-400 font-medium">{t('product.guarantee')}</dt>

@@ -13,6 +13,7 @@ class SaleItem(Base):
     quantity = Column(Integer, nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)
     subtotal = Column(Numeric(10, 2), nullable=False)
+    part_number = Column(String(100), nullable=True, index=True)
 
     sale = relationship("Sale", back_populates="items")
     product = relationship("Product")

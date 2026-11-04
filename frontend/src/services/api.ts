@@ -248,7 +248,7 @@ export const recordSale = async (saleData: {
   customer_name?: string;
   customer_phone?: string;
   notes?: string;
-  items: { product_id: string; quantity: number; unit_price: number }[];
+  items: { product_id: string; quantity: number; unit_price: number; part_number?: string }[];
 }): Promise<Sale> => {
   const { data } = await apiClient.post<Sale>('/admin/sales', saleData);
   return data;

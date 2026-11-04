@@ -34,7 +34,6 @@ describe('ProductCard component', () => {
 
     expect(screen.getByText('PowerZone PZ-38B20R Car Battery')).toBeInTheDocument();
     expect(screen.getByText('PZ-38B20R')).toBeInTheDocument();
-    expect(screen.getByText('#PZ38B20R-IND')).toBeInTheDocument();
     expect(screen.getByText('48 Months')).toBeInTheDocument();
     expect(screen.getByText('In Stock')).toBeInTheDocument();
     expect(screen.getByText(/4,199/)).toBeInTheDocument();

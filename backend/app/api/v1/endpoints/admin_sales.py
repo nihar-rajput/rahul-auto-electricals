@@ -103,6 +103,7 @@ def get_sale_detail(
                 product_id=it.product_id,
                 product_name=it.product.name if it.product else "Product",
                 product_model=it.product.model if it.product else None,
+                part_number=it.part_number,
                 quantity=it.quantity,
                 unit_price=it.unit_price,
                 subtotal=it.subtotal,

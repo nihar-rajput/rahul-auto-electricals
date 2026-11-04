@@ -109,6 +109,7 @@ export interface SaleItem {
   product_id: string;
   product_name?: string | null;
   product_model?: string | null;
+  part_number?: string | null;
   quantity: number;
   unit_price: string | number;
   subtotal: string | number;

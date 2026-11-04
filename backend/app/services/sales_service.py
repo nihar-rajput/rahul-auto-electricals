@@ -69,6 +69,7 @@ def record_sale(db: Session, admin_id: str, sale_in: SaleCreate) -> SaleResponse
             "quantity": item_in.quantity,
             "unit_price": item_in.unit_price,
             "subtotal": subtotal,
+            "part_number": item_in.part_number,
             "product_name": product.name,
             "product_model": product.model,
         })
@@ -94,6 +95,7 @@ def record_sale(db: Session, admin_id: str, sale_in: SaleCreate) -> SaleResponse
             quantity=item_data["quantity"],
             unit_price=item_data["unit_price"],
             subtotal=item_data["subtotal"],
+            part_number=item_data["part_number"],
         )
         db.add(db_item)
         db.flush()
@@ -104,6 +106,7 @@ def record_sale(db: Session, admin_id: str, sale_in: SaleCreate) -> SaleResponse
                 product_id=item_data["product_id"],
                 product_name=item_data["product_name"],
                 product_model=item_data["product_model"],
+                part_number=item_data["part_number"],
                 quantity=item_data["quantity"],
                 unit_price=item_data["unit_price"],
                 subtotal=item_data["subtotal"],
@@ -185,6 +188,7 @@ def cancel_sale(db: Session, admin_id: str, sale_id: str, reason: str = "Admin c
             product_id=item.product_id,
             product_name=item.product.name if item.product else "Product",
             product_model=item.product.model if item.product else None,
+            part_number=item.part_number,
             quantity=item.quantity,
             unit_price=item.unit_price,
             subtotal=item.subtotal,
@@ -241,6 +245,7 @@ def list_sales(
                 func.lower(Sale.customer_name).ilike(term),
                 func.lower(Sale.customer_phone).ilike(term),
                 func.lower(Sale.id).ilike(term),
+                Sale.items.any(func.lower(SaleItem.part_number).ilike(term)),
             )
         )
 
@@ -279,6 +284,7 @@ def list_sales(
                         product_id=it.product_id,
                         product_name=it.product.name if it.product else "Deleted Product",
                         product_model=it.product.model if it.product else None,
+                        part_number=it.part_number,
                         quantity=it.quantity,
                         unit_price=it.unit_price,
                         subtotal=it.subtotal,

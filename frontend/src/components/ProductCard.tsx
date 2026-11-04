@@ -88,20 +88,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, settings }) =
 
           {/* Key Specs Row */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mb-3">
-            {product.voltage && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">
-                {product.voltage}
-              </span>
-            )}
-            {product.ah_capacity && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">
-                {product.ah_capacity}
-              </span>
-            )}
             {product.warranty_duration && (
               <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="truncate max-w-[130px]">{product.warranty_duration}</span>
+                <span className="truncate max-w-[150px]">{product.warranty_duration}</span>
+              </span>
+            )}
+            {product.part_number && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-500">
+                #{product.part_number}
               </span>
             )}
           </div>

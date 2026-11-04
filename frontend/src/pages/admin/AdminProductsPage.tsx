@@ -61,8 +61,6 @@ export const AdminProductsPage: React.FC = () => {
     description: '',
     price: '' as any,
     quantity: '' as any,
-    voltage: '12V',
-    ah_capacity: '',
     warranty_duration: '',
     guarantee_details: '',
     low_stock_threshold: '' as any,
@@ -155,8 +153,6 @@ export const AdminProductsPage: React.FC = () => {
       description: '',
       price: '' as any,
       quantity: '' as any,
-      voltage: '12V',
-      ah_capacity: '',
       warranty_duration: '48 Months (24 Free + 24 Pro-rata)',
       guarantee_details: '24 Months Replacement',
       low_stock_threshold: '' as any,
@@ -180,8 +176,6 @@ export const AdminProductsPage: React.FC = () => {
       description: prod.description || '',
       price: Number(prod.price),
       quantity: prod.quantity,
-      voltage: prod.voltage || '12V',
-      ah_capacity: prod.ah_capacity || '',
       warranty_duration: prod.warranty_duration || '',
       guarantee_details: prod.guarantee_details || '',
       low_stock_threshold: prod.low_stock_threshold,
@@ -299,8 +293,6 @@ export const AdminProductsPage: React.FC = () => {
       'Battery Type',
       'Price',
       'Quantity',
-      'Voltage',
-      'Ah Capacity',
       'Warranty',
       'Guarantee Details',
       'Low Stock Threshold',
@@ -310,7 +302,7 @@ export const AdminProductsPage: React.FC = () => {
     ];
     const sampleRows = [
       [
-        'PowerZone PZ-38B20R Car Battery (35Ah)',
+        'PowerZone PZ-38B20R Car Battery',
         'PowerZone',
         'Batteries',
         'PZ-38B20R',
@@ -318,8 +310,6 @@ export const AdminProductsPage: React.FC = () => {
         'Car',
         '3499.00',
         '15',
-        '12V',
-        '35 Ah',
         '48 Months (24 Free + 24 Pro-rata)',
         '24 Months Free Replacement',
         '5',
@@ -328,7 +318,7 @@ export const AdminProductsPage: React.FC = () => {
         'Maintenance-free car battery for Maruti Suzuki, Hyundai, and Tata compact cars.',
       ],
       [
-        'Amaron Pro Rider 5Ah Two-Wheeler Battery',
+        'Amaron Pro Rider Two-Wheeler Battery',
         'Amaron',
         'Batteries',
         'AP-BTZ5',
@@ -336,8 +326,6 @@ export const AdminProductsPage: React.FC = () => {
         'Bike',
         '1350.00',
         '25',
-        '12V',
-        '5 Ah',
         '48 Months (24 Free + 24 Pro-rata)',
         '24 Months Free Replacement',
         '8',
@@ -346,7 +334,7 @@ export const AdminProductsPage: React.FC = () => {
         'VRLA factory charged bike battery for Honda Activa, Hero Splendor, and Bajaj Pulsar.',
       ],
       [
-        'Exide Inva Tubular 150Ah Inverter Battery',
+        'Exide Inva Tubular Inverter Battery',
         'Exide',
         'Batteries',
         'IT500',
@@ -354,8 +342,6 @@ export const AdminProductsPage: React.FC = () => {
         'Inverter',
         '14500.00',
         '6',
-        '12V',
-        '150 Ah',
         '60 Months (36 Free + 24 Pro-rata)',
         '36 Months Free Replacement',
         '2',
@@ -843,30 +829,7 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Specs: Voltage, Ah, Warranty, Guarantee */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Voltage</label>
-                  <input
-                    type="text"
-                    value={formData.voltage || ''}
-                    onChange={(e) => setFormData({ ...formData, voltage: e.target.value })}
-                    placeholder="e.g. 12V"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Ah Capacity</label>
-                  <input
-                    type="text"
-                    value={formData.ah_capacity || ''}
-                    onChange={(e) => setFormData({ ...formData, ah_capacity: e.target.value })}
-                    placeholder="e.g. 35Ah or 150Ah"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
+              {/* Warranty and Guarantee Details */}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>

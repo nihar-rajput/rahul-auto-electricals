@@ -214,16 +214,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ settings }
             </h3>
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3 bg-white border border-slate-200 rounded-lg">
-                <dt className="text-slate-400 font-medium">{t('product.voltage')}</dt>
+                <dt className="text-slate-400 font-medium">Model</dt>
                 <dd className="font-bold text-slate-900 font-mono mt-0.5">
-                  {product.voltage || '12V'}
+                  {product.model}
                 </dd>
               </div>
 
               <div className="p-3 bg-white border border-slate-200 rounded-lg">
-                <dt className="text-slate-400 font-medium">{t('product.ahCapacity')}</dt>
-                <dd className="font-bold text-slate-900 font-mono mt-0.5">
-                  {product.ah_capacity || 'N/A'}
+                <dt className="text-slate-400 font-medium">Battery Type</dt>
+                <dd className="font-bold text-slate-900 mt-0.5">
+                  {product.battery_type}
                 </dd>
               </div>
 
@@ -233,6 +233,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ settings }
                   {product.warranty_duration || 'Standard OEM'}
                 </dd>
               </div>
+
+              {product.part_number && (
+                <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                  <dt className="text-slate-400 font-medium">Part / Serial</dt>
+                  <dd className="font-bold text-slate-900 font-mono mt-0.5">
+                    {product.part_number}
+                  </dd>
+                </div>
+              )}
 
               {product.guarantee_details && (
                 <div className="col-span-2 sm:col-span-3 p-3 bg-white border border-slate-200 rounded-lg">

@@ -394,7 +394,7 @@ def export_products_csv(db: Session) -> str:
     writer = csv.writer(output)
     writer.writerow([
         "Name", "Brand", "Category", "Model", "Part Number", "Battery Type",
-        "Price", "Quantity", "Voltage", "Ah Capacity", "Warranty",
+        "Price", "Quantity", "Warranty",
         "Guarantee Details", "Low Stock Threshold", "Stock Visibility Mode", "Is Published", "Description"
     ])
 
@@ -408,8 +408,6 @@ def export_products_csv(db: Session) -> str:
             p.battery_type,
             str(p.price),
             p.quantity,
-            p.voltage or "",
-            p.ah_capacity or "",
             p.warranty_duration or "",
             p.guarantee_details or "",
             p.low_stock_threshold,
@@ -489,7 +487,7 @@ def import_products_csv(db: Session, csv_content: str, admin_id: Optional[str] =
             qty_str = _clean_numeric_str(get_field(norm, ["quantity", "qty", "stock", "stockquantity", "count"], "0")).split(".")[0]
             quantity_val = int(qty_str or "0")
 
-            voltage = get_field(norm, ["voltage", "volt", "volts"], "12V") or None
+            voltage = get_field(norm, ["voltage", "volt", "volts"], "12V") or "12V"
             ah_capacity = get_field(norm, ["ahcapacity", "ah", "capacity", "amphour"]) or None
             warranty_duration = get_field(norm, ["warranty", "warrantyduration", "warrantyperiod", "months"]) or None
             guarantee_details = get_field(norm, ["guaranteedetails", "guarantee", "replacement"]) or None
